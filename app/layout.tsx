@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import "./globals.css";
 import Link from "next/link";
-import { Menu, X, Home, Search, PlusCircle, Info, LogIn, GraduationCap, MapPin } from "lucide-react";
+import { Menu, X, Home, Search, PlusCircle, Info, LogIn, MapPin } from "lucide-react";
 
 export default function RootLayout({
   children,
@@ -17,7 +17,7 @@ export default function RootLayout({
     setMounted(true);
   }, []);
 
-  // Prevent scrolling when menu is open
+  // Prevent background scrolling when menu is open
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -27,34 +27,35 @@ export default function RootLayout({
   }, [isMenuOpen]);
 
   const navLinks = [
-    { name: "Home", href: "/", icon: <Home size={20} /> },
-    { name: "Matches", href: "/matches", icon: <Search size={20} />, highlight: true },
-    { name: "Report Lost", href: "/report-lost", icon: <PlusCircle size={20} /> },
-    { name: "Report Found", href: "/report-found", icon: <PlusCircle size={20} /> },
-    { name: "About", href: "/about", icon: <Info size={20} /> },
+    { name: "Home", href: "/", icon: <Home size={22} /> },
+    { name: "Matches", href: "/matches", icon: <Search size={22} />, highlight: true },
+    { name: "Report Lost", href: "/report-lost", icon: <PlusCircle size={22} /> },
+    { name: "Report Found", href: "/report-found", icon: <PlusCircle size={22} /> },
+    { name: "About", href: "/about", icon: <Info size={22} /> },
   ];
 
   if (!mounted) return null;
 
   return (
     <html lang="en" className="dark scroll-smooth">
-      <body className="bg-[#030712] text-white font-sans min-h-screen antialiased selection:bg-blue-500/30">
+      <body className="bg-[#030712] text-white font-sans min-h-screen antialiased">
         
         {/* --- NAVIGATION BAR --- */}
-        <header className="fixed top-0 left-0 w-full z-[100] border-b border-white/10 bg-[#030712]/90 backdrop-blur-xl">
+        <header className="fixed top-0 left-0 w-full z-[100] border-b border-white/10 bg-[#030712]/95 backdrop-blur-2xl">
           <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4 md:px-10 md:py-6">
             
-            {/* LOGO */}
-            <Link href="/" className="flex items-center gap-2 group z-[101]">
-              <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center font-black text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+            {/* LOGO - Updated with White 'FIN' */}
+            <Link href="/" className="flex items-center gap-2 group z-[110]">
+              <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center font-black text-white">
                 F
               </div>
               <span className="text-xl font-black tracking-tighter uppercase italic">
-                FIN<span className="text-blue-500">DOOR</span>
+                <span className="text-white">FIN</span>
+                <span className="text-blue-500">DOOR</span>
               </span>
             </Link>
 
-            {/* DESKTOP NAV - Visible on Laptops */}
+            {/* DESKTOP NAV */}
             <div className="hidden md:flex items-center gap-10">
               {navLinks.map((link) => (
                 <Link 
@@ -72,53 +73,57 @@ export default function RootLayout({
               </button>
             </div>
 
-            {/* MOBILE TOGGLE - High Z-index to stay above overlay */}
+            {/* MOBILE TOGGLE */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden z-[101] p-2 text-white bg-white/5 rounded-lg border border-white/10"
+              className="md:hidden z-[110] p-2 text-white bg-white/10 rounded-xl border border-white/20 shadow-lg"
             >
-              {isMenuOpen ? <X size={24} className="text-blue-500" /> : <Menu size={24} />}
+              {isMenuOpen ? <X size={26} className="text-blue-500" /> : <Menu size={26} />}
             </button>
           </nav>
 
-          {/* FULL SCREEN MOBILE OVERLAY */}
+          {/* HIGH-VISIBILITY MOBILE OVERLAY */}
           <div 
-            className={`fixed inset-0 bg-[#030712] z-[99] flex flex-col transition-transform duration-500 ease-in-out md:hidden ${
-              isMenuOpen ? "translate-x-0" : "translate-x-full"
+            className={`fixed inset-0 z-[105] md:hidden transition-all duration-500 ease-in-out ${
+              isMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
             }`}
           >
-            {/* Top spacing to avoid covering the header buttons */}
-            <div className="h-[80px] w-full" /> 
+            {/* Dark Gradient Background to ensure contrast against page content */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#030712] via-[#030712] to-blue-950/20 backdrop-blur-3xl" />
             
-            <div className="flex-1 px-8 py-4 flex flex-col gap-3">
-              <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.4em] mb-4">
-                Campus Navigation
+            <div className="relative h-full flex flex-col px-8 pt-[100px] pb-10">
+              <p className="text-[10px] font-black text-blue-500/50 uppercase tracking-[0.5em] mb-6 ml-2">
+                Menu
               </p>
               
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  href={link.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-5 p-5 rounded-2xl bg-white/[0.03] border border-white/5 active:bg-blue-600/20 transition-all"
-                >
-                  <span className="text-blue-500">{link.icon}</span>
-                  <span className="text-base font-bold uppercase tracking-widest">
-                    {link.name}
-                  </span>
-                  {link.highlight && (
-                    <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                  )}
-                </Link>
-              ))}
+              <div className="flex flex-col gap-3">
+                {navLinks.map((link) => (
+                  <Link 
+                    key={link.name} 
+                    href={link.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-5 p-5 rounded-2xl bg-white/[0.04] border border-white/10 active:bg-blue-600/30 active:border-blue-500/50 transition-all group"
+                  >
+                    <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 group-active:scale-110 transition-transform">
+                      {link.icon}
+                    </div>
+                    <span className="text-base font-black uppercase tracking-widest text-white/90">
+                      {link.name}
+                    </span>
+                    {link.highlight && (
+                      <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_#3b82f6]" />
+                    )}
+                  </Link>
+                ))}
+              </div>
 
-              <div className="mt-auto mb-10 space-y-4">
-                <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3">
-                  <LogIn size={20} /> Login to Campus
+              <div className="mt-auto space-y-6">
+                <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl shadow-blue-500/20 active:scale-95 transition-transform">
+                  Login to Account
                 </button>
-                <div className="flex items-center justify-center gap-2 text-gray-600">
-                  <MapPin size={14} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">MIT ADT Campus</span>
+                <div className="flex items-center justify-center gap-2 text-gray-500 pb-4">
+                  <MapPin size={16} />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em]">MIT ADT Campus</span>
                 </div>
               </div>
             </div>
@@ -126,7 +131,7 @@ export default function RootLayout({
         </header>
 
         {/* --- MAIN CONTENT --- */}
-        <main className="relative z-0 pt-[80px] md:pt-[100px]">
+        <main className="relative z-0 pt-[85px] md:pt-[110px]">
           {children}
         </main>
 
