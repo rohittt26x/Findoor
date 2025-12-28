@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚪 FINDOOR - Smart Campus Lost & Found
 
-## Getting Started
+**Made by student • Made for student**
 
-First, run the development server:
+FINDOOR is a high-performance, AI-powered lost and found ecosystem specifically designed for the **MIT ADT University** campus. By combining **Gemini 2.0 Multimodal Vision** with a real-time **Firebase** backend, FINDOOR reconnects students with their lost belongings in seconds.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Key Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* **Neural Match Engine:** Uses Gemini 2.0 Flash to compare images and text descriptions for high-accuracy matching.
+* **Real-time Synchronization:** Instant updates via Firebase Realtime Database.
+* **Campus Verified:** Secure authentication ensuring only university community members can interact with reports.
+* **Multimodal Analysis:** The AI doesn't just read—it "sees" item photos to find dents, brands, and colors.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework:** Next.js 15 (App Router)
+- **AI Engine:** Google Gemini 2.0 Flash
+- **Backend:** Firebase (Auth, Realtime Database)
+- **Styling:** Tailwind CSS & Framer Motion (for premium animations)
+- **Icons:** Lucide React
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 👨‍💻 Developed By
 
-## Deploy on Vercel
+**Rohit J. Pokale** *Engineering Student @ MIT ADT University*
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+"I built FINDOOR to bridge the gap between lost items and their owners using modern AI, ensuring no student has to lose more than just their time."
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[LinkedIn](https://www.linkedin.com/in/rohit-pokale-677460378) • [GitHub](https://github.com/rohittt26x) • [Instagram](https://www.instagram.com/rohittt_26x)
+
+---
+
+## 🔒 Security
+This project uses **Environment Variables** (`.env`) to protect sensitive API keys. Credentials are never hardcoded in the source code, following industry-standard security practices.
+
+---
+© 2025 Rohit J. Pokale | MIT ADT University
