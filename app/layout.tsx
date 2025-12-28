@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Menu, X, Home, Search, PlusCircle, 
-  Info, LogIn, MapPin, Sparkles, Heart 
+  Info, LogIn, MapPin, Sparkles, MoreHorizontal 
 } from "lucide-react";
 
 export default function RootLayout({
@@ -31,11 +31,11 @@ export default function RootLayout({
   }, [isMenuOpen]);
 
   const navLinks = [
-    { name: "Home", href: "/", icon: <Home size={20} />, sub: "Campus Dashboard" },
-    { name: "Matches", href: "/matches", icon: <Search size={20} />, sub: "AI Smart Match", highlight: true },
-    { name: "Report Lost", href: "/report-lost", icon: <PlusCircle size={20} />, sub: "Find your items" },
-    { name: "Report Found", href: "/report-found", icon: <PlusCircle size={20} />, sub: "Help the community" },
-    { name: "About", href: "/about", icon: <Info size={20} />, sub: "The Vision" },
+    { name: "Home", href: "/", icon: <Home size={20} />, sub: "Dashboard" },
+    { name: "Matches", href: "/matches", icon: <Search size={20} />, sub: "AI Matcher", highlight: true },
+    { name: "Report Lost", href: "/report-lost", icon: <PlusCircle size={20} />, sub: "Lost something?" },
+    { name: "Report Found", href: "/report-found", icon: <PlusCircle size={20} />, sub: "Found something?" },
+    { name: "About", href: "/about", icon: <Info size={20} />, sub: "Developer Info" },
   ];
 
   if (!mounted) return null;
@@ -44,13 +44,13 @@ export default function RootLayout({
     <html lang="en" className="dark scroll-smooth">
       <body className="bg-[#030712] text-white font-sans min-h-screen antialiased overflow-x-hidden">
         
-        {/* --- NAVIGATION BAR --- */}
+        {/* --- GLOBAL NAVIGATION BAR --- */}
         <header className="fixed top-0 left-0 w-full z-[100] border-b border-white/5 bg-[#030712]/80 backdrop-blur-2xl">
           <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4 md:px-10">
             
-            {/* LOGO */}
+            {/* LOGO SECTION */}
             <Link href="/" className="flex items-center gap-2 group z-[110]">
-              <div className="bg-blue-600 w-9 h-9 rounded-xl flex items-center justify-center font-black text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] group-hover:scale-110 transition-transform">
+              <div className="bg-blue-600 w-9 h-9 rounded-xl flex items-center justify-center font-black text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] group-hover:rotate-6 transition-all">
                 F
               </div>
               <span className="text-xl font-black tracking-tighter uppercase italic">
@@ -59,13 +59,13 @@ export default function RootLayout({
               </span>
             </Link>
 
-            {/* DESKTOP NAV */}
-            <div className="hidden md:flex items-center gap-10">
+            {/* DESKTOP MENU (Laptops/PCs) */}
+            <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link 
                   key={link.name} 
                   href={link.href} 
-                  className={`text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:opacity-100 ${
+                  className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:opacity-100 ${
                     link.highlight ? 'text-blue-400' : 'text-gray-400 hover:text-white'
                   }`}
                 >
@@ -77,50 +77,44 @@ export default function RootLayout({
               </button>
             </div>
 
-            {/* MOBILE TOGGLE */}
+            {/* MOBILE MENU TOGGLE (The "3 Dots" Button) */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden z-[110] p-3 text-white bg-white/5 rounded-2xl border border-white/10 shadow-2xl active:scale-90 transition-all"
             >
-              {isMenuOpen ? <X size={24} className="text-blue-500" /> : <Menu size={24} />}
+              {isMenuOpen ? <X size={24} className="text-blue-500" /> : <MoreHorizontal size={24} />}
             </button>
           </nav>
 
-          {/* --- HIGH-VISIBILITY MOBILE OVERLAY --- */}
+          {/* --- MOBILE FULL-SCREEN OVERLAY --- */}
           <AnimatePresence>
             {isMenuOpen && (
               <motion.div 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="fixed inset-0 z-[105] md:hidden bg-[#030712] overflow-hidden"
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                className="fixed inset-0 z-[105] md:hidden bg-[#030712] flex flex-col"
               >
-                {/* 1. BACKGROUND DECORATION (Watermark Fix) */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none z-0">
-                  <h1 className="text-[140px] font-black text-white/[0.02] leading-none uppercase tracking-tighter italic">
-                    FINDOOR
-                  </h1>
-                  <p className="max-w-[280px] text-center text-[9px] font-black text-blue-500/20 uppercase tracking-[0.4em] mt-4">
-                    Made by student • Made for student
-                  </p>
+                {/* Visual Decoration (Doesn't block clicks) */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-[0.03] z-0">
+                  <h1 className="text-[140px] font-black uppercase tracking-tighter italic leading-none">FINDOOR</h1>
                 </div>
 
-                {/* 2. INTERACTIVE MENU LAYER */}
-                <div className="relative z-10 h-full flex flex-col px-8 pt-[120px] pb-10">
-                  <div className="flex items-center gap-2 mb-8 ml-2">
+                <div className="relative z-10 flex flex-col h-full px-8 pt-[120px] pb-10">
+                  {/* Header in Menu */}
+                  <div className="flex items-center gap-2 mb-10 ml-2">
                     <Sparkles size={14} className="text-blue-500" />
-                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.5em]">
-                      Neural Navigation
-                    </p>
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em]">Main Navigation</p>
                   </div>
                   
-                  <div className="flex flex-col gap-3">
+                  {/* Clickable Options List */}
+                  <div className="flex flex-col gap-4">
                     {navLinks.map((link, i) => (
                       <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
                         key={link.name}
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: i * 0.05 }}
                       >
                         <Link 
                           href={link.href}
@@ -130,42 +124,36 @@ export default function RootLayout({
                           <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-active:scale-110 transition-transform">
                             {link.icon}
                           </div>
-                          <div>
-                            <span className="block text-base font-black uppercase tracking-widest text-white/90">
-                              {link.name}
-                            </span>
-                            <span className="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
-                              {link.sub}
-                            </span>
+                          <div className="flex flex-col">
+                            <span className="text-base font-black uppercase tracking-widest text-white">{link.name}</span>
+                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">{link.sub}</span>
                           </div>
                           {link.highlight && (
-                            <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_15px_#3b82f6]" />
+                             <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_#3b82f6]" />
                           )}
                         </Link>
                       </motion.div>
                     ))}
                   </div>
 
-                  {/* 3. FOOTER SECTION WITH CREDITS */}
+                  {/* Footer Credits */}
                   <div className="mt-auto space-y-8">
-                    <button className="w-full bg-blue-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] shadow-[0_20px_40px_rgba(37,99,235,0.2)] active:scale-95 transition-all">
+                    <button className="w-full bg-blue-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] shadow-[0_20px_40px_rgba(37,99,235,0.2)]">
                       Login to Account
                     </button>
                     
-                    <div className="flex flex-col items-center gap-4 pb-4">
+                    <div className="flex flex-col items-center gap-4 text-center">
                       <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin size={14} />
-                        <span className="text-[9px] font-black uppercase tracking-[0.3em]">MIT ADT Campus</span>
+                        <MapPin size={12} />
+                        <span className="text-[8px] font-black uppercase tracking-[0.3em]">MIT ADT Campus</span>
                       </div>
-                      <div className="h-px w-12 bg-white/10" />
-                      <div className="text-center">
-                        <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.4em]">
-                          Built by <span className="text-blue-500/50">Rohit J. Pokale</span>
-                        </p>
-                        <p className="text-[8px] font-bold text-gray-700 uppercase tracking-[0.2em] mt-1">
-                          Made by student • Made for student
-                        </p>
-                      </div>
+                      <div className="h-px w-10 bg-white/10" />
+                      <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.3em]">
+                        Developed by <span className="text-blue-500">Rohit J. Pokale</span>
+                      </p>
+                      <p className="text-[8px] font-bold text-gray-700 uppercase tracking-[0.2em]">
+                        Made by student • Made for student
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -174,8 +162,8 @@ export default function RootLayout({
           </AnimatePresence>
         </header>
 
-        {/* --- MAIN CONTENT --- */}
-        <main className="relative z-0 pt-[85px] md:pt-[110px]">
+        {/* --- MAIN PAGE CONTENT --- */}
+        <main className="relative z-0 pt-[80px] md:pt-[100px]">
           {children}
         </main>
 
