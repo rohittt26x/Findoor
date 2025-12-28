@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Menu, X, Home, Search, PlusCircle, 
   Info, LogIn, MapPin, Sparkles
-} from "lucide-react"; // Note: Removed MoreHorizontal, kept Menu
+} from "lucide-react";
 
 export default function RootLayout({
   children,
@@ -30,11 +30,11 @@ export default function RootLayout({
   }, [isMenuOpen]);
 
   const navLinks = [
-    { name: "Home", href: "/", icon: <Home size={20} />, sub: "Dashboard" },
-    { name: "Matches", href: "/matches", icon: <Search size={20} />, sub: "AI Matcher", highlight: true },
-    { name: "Report Lost", href: "/report-lost", icon: <PlusCircle size={20} />, sub: "Lost something?" },
-    { name: "Report Found", href: "/report-found", icon: <PlusCircle size={20} />, sub: "Found something?" },
-    { name: "About", href: "/about", icon: <Info size={20} />, sub: "Developer Info" },
+    { name: "Home", href: "/", icon: <Home size={20} />, sub: "Dashboard", color: "bg-gray-800" },
+    { name: "Matches", href: "/matches", icon: <Search size={20} />, sub: "AI Matcher", highlight: true, color: "bg-blue-900/40" },
+    { name: "Report Lost", href: "/report-lost", icon: <PlusCircle size={20} />, sub: "Lost something?", color: "bg-red-900/20" },
+    { name: "Report Found", href: "/report-found", icon: <PlusCircle size={20} />, sub: "Found something?", color: "bg-green-900/20" },
+    { name: "About", href: "/about", icon: <Info size={20} />, sub: "Developer Info", color: "bg-gray-800" },
   ];
 
   if (!mounted) return null;
@@ -44,7 +44,7 @@ export default function RootLayout({
       <body className="bg-[#030712] text-white font-sans min-h-screen antialiased overflow-x-hidden">
         
         {/* --- GLOBAL NAVIGATION BAR --- */}
-        <header className="fixed top-0 left-0 w-full z-[100] border-b border-white/5 bg-[#030712]/95 backdrop-blur-2xl">
+        <header className="fixed top-0 left-0 w-full z-[100] border-b border-white/5 bg-[#030712] backdrop-blur-2xl">
           <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4 md:px-10">
             
             {/* LOGO SECTION */}
@@ -58,28 +58,30 @@ export default function RootLayout({
               </span>
             </Link>
 
-            {/* DESKTOP MENU */}
-            <div className="hidden md:flex items-center gap-8">
+            {/* DESKTOP MENU - Added Solid Backgrounds to Links */}
+            <div className="hidden md:flex items-center gap-4">
               {navLinks.map((link) => (
                 <Link 
                   key={link.name} 
                   href={link.href} 
-                  className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:opacity-100 ${
-                    link.highlight ? 'text-blue-400' : 'text-gray-400 hover:text-white'
+                  className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 ${
+                    link.highlight 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                    : 'bg-white/10 text-gray-300 hover:text-white hover:bg-white/20'
                   }`}
                 >
                   {link.name}
                 </Link>
               ))}
-              <button className="bg-white text-black px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white transition-all shadow-xl">
+              <button className="bg-white text-black px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white transition-all shadow-xl ml-4">
                 Login
               </button>
             </div>
 
-            {/* MOBILE MENU TOGGLE - CHANGED FROM DOTS TO 3 LINES */}
+            {/* MOBILE MENU TOGGLE - Switched to Menu (3 lines) */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden z-[110] p-3 text-white bg-blue-600/10 rounded-2xl border border-blue-500/20 shadow-2xl active:scale-90 transition-all"
+              className="md:hidden z-[110] p-3 text-white bg-white/10 rounded-2xl border border-white/10 shadow-2xl active:scale-90 transition-all"
             >
               {isMenuOpen ? <X size={24} className="text-blue-500" /> : <Menu size={24} />}
             </button>
@@ -89,24 +91,20 @@ export default function RootLayout({
           <AnimatePresence>
             {isMenuOpen && (
               <motion.div 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                // CHANGED: bg-[#080c17] (Solid dark blue/black) to ensure it's not transparent
-                className="fixed inset-0 z-[105] md:hidden bg-[#080c17] flex flex-col"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                // Changed to a solid background color
+                className="fixed inset-0 z-[105] md:hidden bg-[#0a0f1d] flex flex-col"
               >
-                {/* Decoration */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-[0.02] z-0">
-                  <h1 className="text-[120px] font-black uppercase tracking-tighter italic leading-none">FINDOOR</h1>
-                </div>
-
-                <div className="relative z-10 flex flex-col h-full px-6 pt-[100px] pb-10 overflow-y-auto">
+                <div className="relative z-10 flex flex-col h-full px-8 pt-[100px] pb-10 overflow-y-auto">
+                  
                   <div className="flex items-center gap-2 mb-8 ml-2">
                     <Sparkles size={14} className="text-blue-500" />
-                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em]">Main Navigation</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Navigation Menu</p>
                   </div>
                   
-                  {/* Clickable Options List */}
+                  {/* Clickable Options List with Solid Backgrounds */}
                   <div className="flex flex-col gap-3">
                     {navLinks.map((link, i) => (
                       <motion.div
@@ -118,37 +116,33 @@ export default function RootLayout({
                         <Link 
                           href={link.href}
                           onClick={() => setIsMenuOpen(false)}
-                          // CHANGED: Higher opacity background for items to stand out against solid background
-                          className="flex items-center gap-5 p-4 rounded-[1.5rem] bg-white/[0.05] border border-white/5 active:bg-blue-600 active:border-blue-500 transition-all group"
+                          // Changed background to a more solid gray/blue
+                          className={`flex items-center gap-5 p-4 rounded-2xl border border-white/5 transition-all active:scale-[0.98] ${link.color || 'bg-white/10'}`}
                         >
-                          <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center group-active:scale-110 group-active:text-white transition-transform">
+                          <div className="w-10 h-10 rounded-xl bg-black/20 text-blue-400 flex items-center justify-center">
                             {link.icon}
                           </div>
                           <div className="flex flex-col">
                             <span className="text-sm font-black uppercase tracking-widest text-white">{link.name}</span>
-                            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">{link.sub}</span>
+                            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{link.sub}</span>
                           </div>
-                          {link.highlight && (
-                             <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                          )}
                         </Link>
                       </motion.div>
                     ))}
                   </div>
 
-                  {/* Footer Credits */}
-                  <div className="mt-10 space-y-8">
-                    <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg">
+                  {/* Footer Section */}
+                  <div className="mt-auto pt-10">
+                    <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] mb-8 shadow-lg">
                       Login to Account
                     </button>
                     
-                    <div className="flex flex-col items-center gap-3 text-center opacity-60">
-                      <div className="flex items-center gap-2 text-gray-400">
-                        <MapPin size={12} />
-                        <span className="text-[8px] font-black uppercase tracking-[0.3em]">MIT ADT Campus</span>
-                      </div>
-                      <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.3em]">
+                    <div className="flex flex-col items-center gap-2 text-center opacity-60">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.3em]">
                         Developed by <span className="text-blue-500">Rohit J. Pokale</span>
+                      </p>
+                      <p className="text-[7px] font-bold text-gray-500 uppercase tracking-[0.2em]">
+                        MIT ADT Campus
                       </p>
                     </div>
                   </div>
