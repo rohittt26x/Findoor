@@ -27,7 +27,6 @@ export default function RootLayout({
     setMounted(true);
   }, []);
 
-  // Prevent background scrolling
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? "hidden" : "unset";
   }, [isMenuOpen]);
@@ -90,27 +89,23 @@ export default function RootLayout({
                     ${
                       link.highlight
                         ? "bg-blue-600 text-white shadow-lg"
-                        : "bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white"
+                        : "bg-white/10 text-white hover:bg-white/20"
                     }`}
                 >
                   {link.name}
                 </Link>
               ))}
-
-              <button className="bg-white text-black px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white transition-all shadow-xl">
-                Login
-              </button>
             </div>
 
-            {/* MOBILE TOGGLE (3 LINES) */}
+            {/* MOBILE TOGGLE (WHITE 3 LINES) */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-3 rounded-2xl bg-white/10 border border-white/10"
             >
               {isMenuOpen ? (
-                <X size={24} className="text-blue-500" />
+                <X size={24} className="text-white" />
               ) : (
-                <Menu size={24} />
+                <Menu size={24} className="text-white" />
               )}
             </button>
           </nav>
@@ -157,7 +152,7 @@ export default function RootLayout({
                           </div>
 
                           <div>
-                            <p className="font-black uppercase tracking-widest">
+                            <p className="font-black uppercase tracking-widest text-white">
                               {link.name}
                             </p>
                             <p className="text-[9px] text-gray-400 uppercase tracking-widest">
@@ -169,26 +164,14 @@ export default function RootLayout({
                     ))}
                   </div>
 
-                  {/* FOOTER */}
-                  <div className="mt-auto space-y-8">
-                    <button className="w-full bg-blue-600 py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] shadow-xl">
-                      Login to Account
-                    </button>
-
-                    <div className="text-center space-y-3">
-                      <div className="flex items-center justify-center gap-2 text-gray-500">
-                        <MapPin size={12} />
-                        <span className="text-[8px] font-black uppercase tracking-[0.3em]">
-                          MIT ADT Campus
-                        </span>
-                      </div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">
-                        Developed by{" "}
-                        <span className="text-blue-500">
-                          Rohit J. Pokale
-                        </span>
-                      </p>
-                    </div>
+                  {/* FOOTER (CLEANED) */}
+                  <div className="mt-auto text-center space-y-3">
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">
+                      Developed by{" "}
+                      <span className="text-blue-500">
+                        Rohit J. Pokale
+                      </span>
+                    </p>
                   </div>
                 </div>
               </motion.div>
