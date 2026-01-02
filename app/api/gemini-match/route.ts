@@ -5,7 +5,6 @@ export const maxDuration = 60;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: Request) {
-  // Define variables outside try block so catch can see them
   let lostItem: any = null;
   let foundItems: any[] = [];
 
@@ -14,7 +13,6 @@ export async function POST(req: Request) {
     lostItem = body.lostItem;
     foundItems = body.foundItems;
 
-    // 1. FIXED: Changed Array.now to Array.isArray
     if (!lostItem || !foundItems || !Array.isArray(foundItems)) {
       return NextResponse.json({ error: "Insufficient data" }, { status: 400 });
     }
@@ -33,37 +31,46 @@ export async function POST(req: Request) {
       ${foundItems.map((item: any) => `ID: ${item.id}, Name: ${item.itemName}, Location: ${item.location}`).join("\n")}
 
       TASK:
-      Compare the Lost Item against the database. 
-      Identify which Found Items are likely to be the same object based on name similarity and location proximity.
+      1. Compare the Lost Item against the database.
+      2. Use semantic matching (e.g., "blue" is similar to "navy").
+      3. Identify likely matches based on item type and location proximity.
       
-      Return ONLY a JSON array of the matching IDs. 
-      Example: ["id1", "id4"]
-      If no matches, return [].
+      Return ONLY a JSON array of the "id" strings. Do not include markdown formatting or extra text.
+      Example: ["id123", "id456"]
     `;
 
     const result = await model.generateContent(prompt);
+    
+    // Safety check: Ensure the AI actually returned a response
+    if (!result.response) throw new Error("AI Safety Filter blocked the response");
+
     const text = result.response.text();
     
+    // Robust extraction: Finds the array even if Gemini adds markdown code blocks
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error("Invalid AI format");
+    if (!jsonMatch) throw new Error("AI output was not in the correct JSON format");
     
     const matches = JSON.parse(jsonMatch[0]);
 
     return NextResponse.json({ matches });
 
   } catch (error: any) {
-    console.error("AI Error:", error.message);
+    console.error("AI Route Error:", error.message);
     
-    // 2. FIXED: Fallback logic now uses the local variables correctly
+    // Fallback: Basic Keyword Matching
     if (lostItem && foundItems) {
-      const lostName = lostItem.itemName.toLowerCase();
+      const lostWords = lostItem.itemName.toLowerCase().split(' ').filter((w: string) => w.length > 2);
       const fallbacks = foundItems
-        .filter((f: any) => f.itemName.toLowerCase().includes(lostName.split(' ')[0]))
+        .filter((f: any) => {
+          const foundName = f.itemName.toLowerCase();
+          return lostWords.some((word: string) => foundName.includes(word)) || 
+                 f.location.toLowerCase() === lostItem.location.toLowerCase();
+        })
         .map((f: any) => f.id);
 
       return NextResponse.json({ matches: fallbacks });
     }
 
-    return NextResponse.json({ matches: [] });
+    return NextResponse.json({ matches: [], error: error.message });
   }
 }
