@@ -149,7 +149,7 @@ export default function MatchesPage() {
           {view === "select" ? (
             /* --- SELECTION VIEW --- */
             <motion.section key="selection" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="text-center max-w-3xl mx-auto">
-              <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">MIT ADT Campus</span>
+              <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">AI powered</span>
               <h1 className="text-6xl md:text-7xl font-bold text-white tracking-tight mb-8">What is your <span className="text-blue-500">intent</span>?</h1>
               <div className="grid sm:grid-cols-2 gap-6 mt-16">
                 <SelectionCard title="Found Items" desc="Search for your lost property." icon={<Search size={32} />} onClick={() => setView("found")} primary />
