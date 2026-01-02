@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ref, onValue, set, get } from "firebase/database"; // Added 'get'
+import { ref, onValue, set, get } from "firebase/database";
 import { database, auth } from "@/app/lib/firebase"; 
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,8 +29,9 @@ export default function MatchesPage() {
   
   // AI Matching States
   const [isScanning, setIsScanning] = useState(false);
-  const [aiMatches, setAiMatches] = useState<string[]>([]); // Array of matching IDs
+  const [aiMatches, setAiMatches] = useState<string[]>([]);
 
+  // Load items from Firebase based on the current view
   useEffect(() => {
     if (view === "select") return;
     setLoading(true);
@@ -40,19 +41,19 @@ export default function MatchesPage() {
     const unsubscribe = onValue(itemsRef, (snapshot) => {
       const data = snapshot.val();
       const loadedItems = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
-      setItems(loadedItems.reverse());
+      setItems(loadedItems.reverse()); // Show newest entries first
       setLoading(false);
     });
     return () => unsubscribe();
   }, [view]);
 
-  // --- AI MATCH SCAN LOGIC ---
+  // --- AI MATCH SCAN LOGIC USING GEMINI ---
   const handleAiScan = async (lostItem: Item) => {
     setIsScanning(true);
     setAiMatches([]);
 
     try {
-      // 1. Fetch all Found Items to compare against
+      // 1. Fetch all Found Items to compare against the selected Lost Item
       const foundItemsRef = ref(database, "found_items");
       const snapshot = await get(foundItemsRef);
       const foundData = snapshot.val();
@@ -64,91 +65,130 @@ export default function MatchesPage() {
         return;
       }
 
-      /**
-       * Note: For a production app, you would call your Gemini API route here.
-       * For now, we simulate the "AI Processing" with a smart filter.
-       */
-      setTimeout(() => {
-        const matches = allFoundItems
-          .filter(found => 
-            found.itemName.toLowerCase().includes(lostItem.itemName.toLowerCase().split(' ')[0]) ||
-            found.location === lostItem.location
-          )
-          .map(m => m.id);
+      // 2. Call your internal Next.js API route that talks to Gemini
+      const response = await fetch("/api/ai-match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lostItem: lostItem,
+          foundItems: allFoundItems,
+        }),
+      });
 
-        setAiMatches(matches);
-        setIsScanning(false);
-        
-        if (matches.length > 0) {
-          setStatusMsg({ text: `AI found ${matches.length} potential matches!`, type: 'success' });
-        } else {
-          setStatusMsg({ text: "AI couldn't find a strong match. We'll keep looking!", type: 'error' });
-        }
-      }, 3000); // 3-second simulation for "AI Thinking"
+      const result = await response.json();
+
+      if (result.matches && result.matches.length > 0) {
+        setAiMatches(result.matches);
+        setStatusMsg({ text: `Gemini found ${result.matches.length} potential matches!`, type: 'success' });
+        // Automatically switch view to Found Items to show the matches
+        setView("found"); 
+      } else {
+        setStatusMsg({ text: "Gemini couldn't find a direct match. We'll keep looking!", type: 'error' });
+      }
 
     } catch (e) {
+      console.error("AI Scan Error:", e);
+      setStatusMsg({ text: "AI Scan failed. Check API configuration.", type: 'error' });
+    } finally {
       setIsScanning(false);
-      setStatusMsg({ text: "AI Scan failed. Please try again.", type: 'error' });
     }
   };
 
   const handleRequestDetails = async (item: Item) => {
     if (!auth.currentUser) {
-      setStatusMsg({ text: "Authentication required.", type: 'error' });
+      setStatusMsg({ text: "Please log in to request details.", type: 'error' });
       return;
     }
-    // ... your existing request logic
+
+    try {
+      const mailRef = ref(database, `mail_requests/${Date.now()}`);
+      await set(mailRef, {
+        to: item.userEmail,
+        message: {
+          subject: `[FINDOOR] Inquiry for: ${item.itemName}`,
+          text: `Hi ${item.userName}, ${auth.currentUser.displayName} is inquiring about your post. Contact: ${auth.currentUser.email}`,
+        },
+        requesterId: auth.currentUser.uid,
+        itemId: item.id
+      });
+      setStatusMsg({ text: "Request sent! The owner will be notified.", type: 'success' });
+    } catch (e) {
+      setStatusMsg({ text: "Failed to send request.", type: 'error' });
+    }
   };
 
   return (
-    <main className="min-h-screen bg-[#030712] text-slate-200">
+    <main className="min-h-screen bg-[#030712] text-slate-200 selection:bg-blue-500/30">
       
-      {/* Scanning Overlay */}
+      {/* --- AI SCANNING OVERLAY --- */}
       <AnimatePresence>
         {isScanning && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[500] bg-[#030712]/80 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center"
+            className="fixed inset-0 z-[500] bg-[#030712]/90 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-center"
           >
             <div className="relative mb-8">
-                <motion.div 
-                    animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                    className="w-32 h-32 border-2 border-blue-500/20 border-t-blue-500 rounded-full"
-                />
-                <Sparkles className="absolute inset-0 m-auto text-blue-400 animate-pulse" size={40} />
+              <motion.div 
+                animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                className="w-32 h-32 border-2 border-blue-500/20 border-t-blue-500 rounded-full"
+              />
+              <Sparkles className="absolute inset-0 m-auto text-blue-400 animate-pulse" size={40} />
             </div>
-            <h2 className="text-2xl font-black uppercase tracking-[0.3em] text-white">AI Match Scan</h2>
-            <p className="text-slate-400 mt-2 max-w-xs">Gemini is analyzing item descriptions and locations to find your belongings...</p>
+            <h2 className="text-2xl font-black uppercase tracking-[0.3em] text-white">Gemini Matching...</h2>
+            <p className="text-slate-400 mt-2 max-w-xs">Analyzing descriptions and locations to find your item across campus.</p>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* --- MAIN PAGE CONTENT --- */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-24">
         <AnimatePresence mode="wait">
           {view === "select" ? (
-            <motion.section key="selection" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="text-center max-w-3xl mx-auto">
-              <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">Discovery Engine</span>
-              <h1 className="text-6xl md:text-7xl font-bold text-white tracking-tight mb-8">What are you <span className="text-blue-500">looking</span> for?</h1>
+            /* --- 1. SELECTION VIEW --- */
+            <motion.section 
+              key="selection" 
+              initial={{ opacity: 0, y: 30 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95 }} 
+              className="text-center max-w-3xl mx-auto"
+            >
+              <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
+                Smart Bridge Engine
+              </span>
+              <h1 className="text-6xl md:text-7xl font-bold text-white tracking-tight mb-8">
+                What are you <span className="text-blue-500">looking</span> for?
+              </h1>
               <div className="grid sm:grid-cols-2 gap-6 mt-16">
-                <SelectionCard title="Found Items" desc="I want to see what people have found." icon={<Search size={32} />} onClick={() => setView("found")} primary />
-                <SelectionCard title="Lost Items" desc="I want to help find missing belongings." icon={<Package size={32} />} onClick={() => setView("lost")} />
+                <SelectionCard title="Found Items" desc="Browse items found on campus." icon={<Search size={32} />} onClick={() => setView("found")} primary />
+                <SelectionCard title="Lost Items" desc="View items reported as lost." icon={<Package size={32} />} onClick={() => setView("lost")} />
               </div>
             </motion.section>
           ) : (
+            /* --- 2. LIST VIEW (LOST OR FOUND) --- */
             <motion.section key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
               <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
                 <div>
                   <button onClick={() => { setView("select"); setAiMatches([]); }} className="flex items-center gap-2 text-slate-500 hover:text-white mb-4 text-sm font-medium transition-colors group">
                     <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to selection
                   </button>
-                  <h2 className="text-4xl font-bold text-white tracking-tight capitalize">{view} <span className="text-slate-500">Database</span></h2>
+                  <h2 className="text-4xl font-bold text-white tracking-tight capitalize">
+                    {view} <span className="text-slate-500">Database</span>
+                  </h2>
                 </div>
+                {aiMatches.length > 0 && (
+                  <button 
+                    onClick={() => setAiMatches([])}
+                    className="text-xs font-bold text-blue-500 border border-blue-500/30 px-4 py-2 rounded-full hover:bg-blue-500 hover:text-white transition"
+                  >
+                    Clear AI Filter
+                  </button>
+                )}
               </div>
 
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-32 gap-4">
                   <Loader2 className="animate-spin text-blue-500" size={32} />
-                  <p className="text-slate-500 font-medium">Syncing...</p>
+                  <p className="text-slate-500">Fetching records...</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -171,10 +211,14 @@ export default function MatchesPage() {
         </AnimatePresence>
       </div>
 
-      {/* Lightbox & Toast Notifications (Same as your code) */}
+      {/* --- OVERLAYS & TOASTS --- */}
       <AnimatePresence>
         {selectedImage && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-[200] flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setSelectedImage(null)}>
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+            className="fixed inset-0 bg-black/95 z-[200] flex items-center justify-center p-6 backdrop-blur-sm" 
+            onClick={() => setSelectedImage(null)}
+          >
             <motion.img initial={{ scale: 0.9 }} animate={{ scale: 1 }} src={selectedImage} className="max-h-full max-w-full rounded-2xl shadow-2xl border border-white/10" />
           </motion.div>
         )}
@@ -190,8 +234,7 @@ export default function MatchesPage() {
   );
 }
 
-// --- UPDATED ITEM CARD ---
-
+// --- ITEM CARD SUB-COMPONENT ---
 function ItemCard({ item, index, viewType, isAiMatch, onImageClick, onRequest, onAiScan }: any) {
   return (
     <motion.div
@@ -204,14 +247,14 @@ function ItemCard({ item, index, viewType, isAiMatch, onImageClick, onRequest, o
     >
       <div className="relative aspect-[16/10] cursor-pointer overflow-hidden m-3 rounded-[1.5rem]" onClick={() => item.imageUrl && onImageClick(item.imageUrl)}>
         {isAiMatch && (
-            <div className="absolute top-4 left-4 z-20 bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                <Sparkles size={10} /> AI MATCH
-            </div>
+          <div className="absolute top-4 left-4 z-20 bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+            <Sparkles size={10} /> AI MATCH
+          </div>
         )}
         {item.imageUrl ? (
-            <img src={item.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <img src={item.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         ) : (
-            <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-slate-700 gap-2"><AlertCircle size={32} /></div>
+          <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-slate-700 gap-2"><AlertCircle size={32} /></div>
         )}
       </div>
       
@@ -231,7 +274,6 @@ function ItemCard({ item, index, viewType, isAiMatch, onImageClick, onRequest, o
               <Sparkles size={14} /> AI Match Scan
             </button>
           )}
-
           <button 
             onClick={onRequest}
             className="w-full py-3.5 bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all border border-white/5 flex items-center justify-center gap-2"
@@ -244,9 +286,7 @@ function ItemCard({ item, index, viewType, isAiMatch, onImageClick, onRequest, o
   );
 }
 
-// ... SelectionCard component (remains the same)
-
-// --- SELECTION CARD COMPONENT ---
+// --- SELECTION CARD SUB-COMPONENT ---
 function SelectionCard({ title, desc, icon, onClick, primary = false }: any) {
   return (
     <button 
@@ -257,28 +297,17 @@ function SelectionCard({ title, desc, icon, onClick, primary = false }: any) {
         : 'bg-white/5 border-white/10 hover:bg-white/[0.08]'
       }`}
     >
-      {/* Decorative Glow for Primary Card */}
       {primary && (
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/10 blur-[60px] rounded-full group-hover:bg-white/20 transition-colors" />
       )}
-
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500 ${
         primary ? 'bg-white/20 text-white' : 'bg-blue-500/10 text-blue-500'
       }`}>
         {icon}
       </div>
-      
-      <h3 className={`text-2xl font-bold mb-2 ${primary ? 'text-white' : 'text-slate-100'}`}>
-        {title}
-      </h3>
-      
-      <p className={`text-sm leading-relaxed ${primary ? 'text-blue-100' : 'text-slate-400'}`}>
-        {desc}
-      </p>
-      
-      <div className={`mt-8 flex items-center gap-2 text-xs font-bold uppercase tracking-widest ${
-        primary ? 'text-white' : 'text-blue-500'
-      }`}>
+      <h3 className={`text-2xl font-bold mb-2 ${primary ? 'text-white' : 'text-slate-100'}`}>{title}</h3>
+      <p className={`text-sm leading-relaxed ${primary ? 'text-blue-100' : 'text-slate-400'}`}>{desc}</p>
+      <div className={`mt-8 flex items-center gap-2 text-xs font-bold uppercase tracking-widest ${primary ? 'text-white' : 'text-blue-500'}`}>
         Explore items <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
       </div>
     </button>

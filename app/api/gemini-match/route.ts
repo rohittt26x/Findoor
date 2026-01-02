@@ -1,99 +1,69 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 1. Set max duration for Vercel (allows time for AI and image processing)
 export const maxDuration = 60;
-
-// 2. Initialize the AI with your secure Server-Side Key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-/**
- * Helper: Converts a Cloudinary/External URL to a Gemini-readable Data Part
- */
-async function imageUrlToDataPart(url: string | undefined) {
-  if (!url || !url.startsWith("http")) return null;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const buffer = await res.arrayBuffer();
-    return {
-      inlineData: {
-        data: Buffer.from(buffer).toString("base64"),
-        mimeType: "image/jpeg",
-      },
-    };
-  } catch (e) {
-    console.warn("Vision System: Could not process image pixels.");
-    return null;
-  }
-}
-
 export async function POST(req: Request) {
+  // Define variables outside try block so catch can see them
+  let lostItem: any = null;
+  let foundItems: any[] = [];
+
   try {
     const body = await req.json();
-    const { lostItem, foundItem } = body;
+    lostItem = body.lostItem;
+    foundItems = body.foundItems;
 
-    if (!lostItem || !foundItem) {
-      return NextResponse.json({ error: "Insufficient data provided" }, { status: 400 });
+    // 1. FIXED: Changed Array.now to Array.isArray
+    if (!lostItem || !foundItems || !Array.isArray(foundItems)) {
+      return NextResponse.json({ error: "Insufficient data" }, { status: 400 });
     }
 
-    try {
-      // 3. ATTEMPT NEURAL MATCHING (AI Vision + Text)
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const lostImg = await imageUrlToDataPart(lostItem.imageUrl);
-      const foundImg = await imageUrlToDataPart(foundItem.imageUrl);
-
-      const prompt = `
-        System: Campus Lost & Found Assistant (MIT ADT University)
-        Task: Compare these two reports to determine if they refer to the same physical object.
-        
-        ITEM A (Lost): "${lostItem.itemName}" - ${lostItem.description || "No description"}
-        ITEM B (Found): "${foundItem.itemName}" - ${foundItem.description || "No description"}
-        
-        Analysis Instructions:
-        - Use location proximity and visual traits (color, brand, logos, shape).
-        - If photos are provided, they take priority in the decision.
-        
-        Return ONLY a JSON object: {"isMatch": boolean, "confidence": number, "reason": "string"}
-      `;
-
-      const parts: any[] = [prompt];
-      if (lostImg) parts.push(lostImg);
-      if (foundImg) parts.push(foundImg);
-
-      const result = await model.generateContent(parts);
-      const text = result.response.text();
+    const prompt = `
+      System: MIT ADT Campus Lost & Found Assistant.
       
-      // Extract valid JSON from potential markdown response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("AI output was not in JSON format");
+      USER LOST ITEM:
+      Name: "${lostItem.itemName}"
+      Location: "${lostItem.location}"
+      Description: "${lostItem.description || "N/A"}"
+
+      DATABASE OF FOUND ITEMS:
+      ${foundItems.map((item: any) => `ID: ${item.id}, Name: ${item.itemName}, Location: ${item.location}`).join("\n")}
+
+      TASK:
+      Compare the Lost Item against the database. 
+      Identify which Found Items are likely to be the same object based on name similarity and location proximity.
       
-      const analysis = JSON.parse(jsonMatch[0]);
+      Return ONLY a JSON array of the matching IDs. 
+      Example: ["id1", "id4"]
+      If no matches, return [].
+    `;
 
-      return NextResponse.json({ raw: analysis });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("Invalid AI format");
+    
+    const matches = JSON.parse(jsonMatch[0]);
 
-    } catch (aiError: any) {
-      // 4. SMART FALLBACK (Triggered if API fails or quota is hit)
-      console.error("AI Logic Failed. Switching to Heuristics:", aiError.message);
+    return NextResponse.json({ matches });
 
-      const nameKeywords = lostItem.itemName.toLowerCase().split(' ');
-      const isKeywordMatch = nameKeywords.some((word: string) => 
-        word.length > 3 && foundItem.itemName.toLowerCase().includes(word)
-      );
-      
-      const locationMatch = lostItem.location.toLowerCase() === foundItem.location.toLowerCase();
-
-      return NextResponse.json({
-        raw: {
-          isMatch: isKeywordMatch || locationMatch,
-          confidence: (isKeywordMatch && locationMatch) ? 80 : isKeywordMatch ? 60 : 30,
-          reason: "Neural engine is in optimization mode. Match calculated via keyword/location heuristics."
-        }
-      });
-    }
   } catch (error: any) {
-    console.error("Critical API Route Crash:", error.message);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("AI Error:", error.message);
+    
+    // 2. FIXED: Fallback logic now uses the local variables correctly
+    if (lostItem && foundItems) {
+      const lostName = lostItem.itemName.toLowerCase();
+      const fallbacks = foundItems
+        .filter((f: any) => f.itemName.toLowerCase().includes(lostName.split(' ')[0]))
+        .map((f: any) => f.id);
+
+      return NextResponse.json({ matches: fallbacks });
+    }
+
+    return NextResponse.json({ matches: [] });
   }
 }
