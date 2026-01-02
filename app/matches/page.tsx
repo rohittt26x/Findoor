@@ -27,7 +27,6 @@ export default function MatchesPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   
-  // AI Matching States
   const [isScanning, setIsScanning] = useState(false);
   const [aiMatches, setAiMatches] = useState<string[]>([]);
 
@@ -46,7 +45,6 @@ export default function MatchesPage() {
     return () => unsubscribe();
   }, [view]);
 
-  // --- AI MATCH SCAN LOGIC (FIXED URL) ---
   const handleAiScan = async (lostItem: Item) => {
     if (!auth.currentUser) {
       setStatusMsg({ text: "Login required to use AI Scan.", type: 'error' });
@@ -68,7 +66,6 @@ export default function MatchesPage() {
         return;
       }
 
-      // FIXED: Changed URL to /api/gemini-match to match your folder structure
       const response = await fetch("/api/gemini-match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,7 +76,6 @@ export default function MatchesPage() {
       });
 
       if (!response.ok) throw new Error("API Route unreachable");
-
       const result = await response.json();
 
       if (result.matches && result.matches.length > 0) {
@@ -89,42 +85,54 @@ export default function MatchesPage() {
       } else {
         setStatusMsg({ text: "No strong matches found by AI.", type: 'error' });
       }
-
     } catch (e) {
       console.error("AI Scan Error:", e);
-      setStatusMsg({ text: "AI Scan failed. Ensure .env.local has your API Key.", type: 'error' });
+      setStatusMsg({ text: "AI Scan failed. Check API configuration.", type: 'error' });
     } finally {
       setIsScanning(false);
     }
   };
 
+  // --- UPDATED CONTACT FACILITY ---
   const handleRequestDetails = async (item: Item) => {
     if (!auth.currentUser) {
-      setStatusMsg({ text: "Authentication required.", type: 'error' });
+      setStatusMsg({ text: "Authentication required to contact.", type: 'error' });
       return;
     }
 
+    if (auth.currentUser.email === item.userEmail) {
+      setStatusMsg({ text: "This is your own post!", type: 'error' });
+      return;
+    }
+
+    setStatusMsg({ text: "Sending contact request...", type: 'success' });
+
     try {
-      const mailRef = ref(database, `mail_requests/${Date.now()}`);
-      await set(mailRef, {
-        to: item.userEmail,
-        message: {
-          subject: `[FINDOOR] Contact Request: ${item.itemName}`,
-          text: `Owner ${item.userName}, ${auth.currentUser.displayName} is requesting to contact you regarding the item found/lost.`,
-        },
-        requesterId: auth.currentUser.uid,
-        itemId: item.id
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: item.userEmail,
+          itemName: item.itemName,
+          requesterName: auth.currentUser.displayName,
+          requesterEmail: auth.currentUser.email,
+        }),
       });
-      setStatusMsg({ text: "Notification sent to owner!", type: 'success' });
+
+      if (response.ok) {
+        setStatusMsg({ text: "Email sent successfully to owner!", type: 'success' });
+      } else {
+        throw new Error("Failed to send email");
+      }
     } catch (e) {
-      setStatusMsg({ text: "Request failed.", type: 'error' });
+      console.error("Email Error:", e);
+      setStatusMsg({ text: "Could not send email. Try again.", type: 'error' });
     }
   };
 
   return (
     <main className="min-h-screen bg-[#030712] text-slate-200">
       
-      {/* AI SCAN OVERLAY */}
       <AnimatePresence>
         {isScanning && (
           <motion.div 
@@ -147,9 +155,8 @@ export default function MatchesPage() {
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-24">
         <AnimatePresence mode="wait">
           {view === "select" ? (
-            /* --- SELECTION VIEW --- */
             <motion.section key="selection" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="text-center max-w-3xl mx-auto">
-              <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">AI powered</span>
+              <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">AI-powered</span>
               <h1 className="text-6xl md:text-7xl font-bold text-white tracking-tight mb-8">What is your <span className="text-blue-500">intent</span>?</h1>
               <div className="grid sm:grid-cols-2 gap-6 mt-16">
                 <SelectionCard title="Found Items" desc="Search for your lost property." icon={<Search size={32} />} onClick={() => setView("found")} primary />
@@ -157,7 +164,6 @@ export default function MatchesPage() {
               </div>
             </motion.section>
           ) : (
-            /* --- LIST VIEW --- */
             <motion.section key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
               <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
                 <div>
@@ -196,7 +202,6 @@ export default function MatchesPage() {
         </AnimatePresence>
       </div>
 
-      {/* OVERLAYS */}
       <AnimatePresence>
         {selectedImage && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-[200] flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setSelectedImage(null)}>
@@ -214,8 +219,6 @@ export default function MatchesPage() {
     </main>
   );
 }
-
-// --- SUB-COMPONENTS ---
 
 function ItemCard({ item, index, viewType, isAiMatch, onImageClick, onRequest, onAiScan }: any) {
   return (
