@@ -93,13 +93,14 @@ export default function MatchesPage() {
     }
   };
 
-  // --- UPDATED CONTACT FACILITY ---
+  // --- UPDATED CONTACT FACILITY (Uses Resend API) ---
   const handleRequestDetails = async (item: Item) => {
     if (!auth.currentUser) {
       setStatusMsg({ text: "Authentication required to contact.", type: 'error' });
       return;
     }
 
+    // Don't let user message themselves
     if (auth.currentUser.email === item.userEmail) {
       setStatusMsg({ text: "This is your own post!", type: 'error' });
       return;
@@ -114,19 +115,23 @@ export default function MatchesPage() {
         body: JSON.stringify({
           to: item.userEmail,
           itemName: item.itemName,
-          requesterName: auth.currentUser.displayName,
+          requesterName: auth.currentUser.displayName || "A Student",
           requesterEmail: auth.currentUser.email,
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         setStatusMsg({ text: "Email sent successfully to owner!", type: 'success' });
       } else {
-        throw new Error("Failed to send email");
+        // Log the specific error from Resend for debugging
+        console.error("Server Error:", data.error);
+        throw new Error(data.error || "Failed to send email");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Email Error:", e);
-      setStatusMsg({ text: "Could not send email. Try again.", type: 'error' });
+      setStatusMsg({ text: `Error: ${e.message}`, type: 'error' });
     }
   };
 
