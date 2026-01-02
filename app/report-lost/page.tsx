@@ -39,7 +39,6 @@ export default function ReportLost() {
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
       );
       const data = await res.json();
-      // Prioritizes building names/landmarks known on campus
       const addressName = data.name || data.display_name.split(',')[0] || "Campus Area";
       const fullText = `${addressName} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
       setLocationValue(fullText);
@@ -99,12 +98,18 @@ export default function ReportLost() {
         imageUrl = result.secure_url;
       }
 
+      // --- DATA UPDATED TO INCLUDE EMAIL & NAME ---
       await push(ref(database, "lost_items"), {
         itemName: (form.elements.namedItem("itemName") as HTMLInputElement).value,
         location: locationValue,
         dateLost: (form.elements.namedItem("dateLost") as HTMLInputElement).value,
         description: (form.elements.namedItem("description") as HTMLTextAreaElement).value,
-        imageUrl, userId: user.uid, campus: "MIT ADT", createdAt: Date.now(),
+        imageUrl, 
+        userId: user.uid,
+        userEmail: user.email || "", // Required for contact facility
+        userName: user.displayName || "Anonymous Student", // Required for contact facility
+        campus: "MIT ADT", 
+        createdAt: Date.now(),
       });
       alert("Lost report published to MIT ADT feed!");
       setImagePreview(null); setLocationValue(""); form.reset();
@@ -113,7 +118,6 @@ export default function ReportLost() {
 
   return (
     <main className="min-h-screen bg-[#020617] flex items-center justify-center px-6 py-24 relative overflow-hidden">
-      {/* Dynamic Search Glows */}
       <div className="absolute top-[-5%] left-[-5%] w-[600px] h-[600px] bg-red-600/10 blur-[130px] rounded-full" />
       <div className="absolute bottom-[-5%] right-[-5%] w-[400px] h-[400px] bg-indigo-600/10 blur-[100px] rounded-full" />
       
@@ -129,7 +133,6 @@ export default function ReportLost() {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Item Name */}
             <div className="group">
               <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Lost Item Name</label>
               <div className="relative">
@@ -138,7 +141,6 @@ export default function ReportLost() {
               </div>
             </div>
 
-            {/* Smart Campus Location Selection */}
             <div className="group">
               <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Last Known Location</label>
               <div className="relative space-y-3">
@@ -179,19 +181,17 @@ export default function ReportLost() {
               </div>
             </div>
 
-            {/* Grid Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="group">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Approximate Date</label>
-                  <input name="dateLost" type="date" required className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white [color-scheme:dark] outline-none focus:ring-2 focus:ring-red-500/20" />
-               </div>
-               <div className="group">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Description</label>
-                  <input name="description" required placeholder="Color, brand, unique details..." className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none focus:ring-2 focus:ring-red-500/20" />
-               </div>
+                <div className="group">
+                   <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Approximate Date</label>
+                   <input name="dateLost" type="date" required className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white [color-scheme:dark] outline-none focus:ring-2 focus:ring-red-500/20" />
+                </div>
+                <div className="group">
+                   <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Description</label>
+                   <input name="description" required placeholder="Color, brand, unique details..." className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none focus:ring-2 focus:ring-red-500/20" />
+                </div>
             </div>
 
-            {/* Photo Preview Area */}
             <div>
               <input type="file" ref={fileInputRef} hidden onChange={handleImageChange} id="imgLost" />
               {!imagePreview ? (

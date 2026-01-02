@@ -26,15 +26,12 @@ export default function ReportFound() {
   const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- REVERSE GEOCODING FUNCTION ---
-  // Converts Lat/Lng into a real building name or street address
   const fetchAddress = async (lat: number, lng: number) => {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
       );
       const data = await res.json();
-      // We prioritize building/POI name, then fallback to full address
       const addressName = data.name || data.display_name.split(',')[0] || "Unknown Spot";
       const fullText = `${addressName} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
       setLocationValue(fullText);
@@ -99,8 +96,14 @@ export default function ReportFound() {
         location: locationValue,
         dateFound: (form.elements.namedItem("dateFound") as HTMLInputElement).value,
         description: (form.elements.namedItem("description") as HTMLTextAreaElement).value,
-        imageUrl, userId: user.uid, campus: "MIT ADT", createdAt: Date.now(),
+        imageUrl, 
+        userId: user.uid,
+        userEmail: user.email || "", 
+        userName: user.displayName || "Anonymous", 
+        campus: "MIT ADT", 
+        createdAt: Date.now(),
       });
+
       alert("Report Published Successfully!");
       setImagePreview(null); setLocationValue(""); form.reset();
     } catch (error) { alert("Error saving data"); } finally { setIsSubmitting(false); }
@@ -108,7 +111,6 @@ export default function ReportFound() {
 
   return (
     <main className="min-h-screen bg-[#020617] flex items-center justify-center px-6 py-24 relative overflow-hidden">
-      {/* Background Aesthetic */}
       <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-emerald-600/10 blur-[130px] rounded-full" />
       
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="relative w-full max-w-2xl">
@@ -123,7 +125,6 @@ export default function ReportFound() {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Item Name */}
             <div className="group">
               <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Item Details</label>
               <div className="relative">
@@ -132,7 +133,6 @@ export default function ReportFound() {
               </div>
             </div>
 
-            {/* GPS/MAP Location Section */}
             <div className="group">
               <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Precise Location</label>
               <div className="relative space-y-3">
@@ -173,19 +173,17 @@ export default function ReportFound() {
               </div>
             </div>
 
-            {/* Date and Description */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="group">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Date Found</label>
-                  <input name="dateFound" type="date" required className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white [color-scheme:dark] outline-none focus:ring-2 focus:ring-emerald-500/20" />
-               </div>
-               <div className="group">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Quick Info</label>
-                  <input name="description" required placeholder="Color, marks, etc." className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
-               </div>
+                <div className="group">
+                   <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Date Found</label>
+                   <input name="dateFound" type="date" required className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white [color-scheme:dark] outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                </div>
+                <div className="group">
+                   <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 ml-1 block">Quick Info</label>
+                   <input name="description" required placeholder="Color, marks, etc." className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                </div>
             </div>
 
-            {/* Evidence Photo */}
             <div>
               <input type="file" ref={fileInputRef} hidden onChange={handleImageChange} id="imgF" />
               {!imagePreview ? (
