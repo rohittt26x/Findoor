@@ -1,6 +1,5 @@
 import "./globals.css";
 import Link from "next/link";
-import Script from "next/script"; // ✅ Added this import
 
 export const metadata = {
   title: "FINDOOR | MIT ADT",
@@ -14,17 +13,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-[#030712] text-white font-sans min-h-screen antialiased selection:bg-blue-500/30">
-        
-        {/* ✅ Google AdSense Script Added Here */}
-        <Script
-          async
+      <head>
+        {/* ✅ Google AdSense Script moved to HEAD for verification */}
+        <script 
+          async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7799320727690809"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+        ></script>
+      </head>
+      <body className="bg-[#030712] text-white font-sans min-h-screen antialiased selection:bg-blue-500/30">
         
-        {/* NAVIGATION - High Contrast & Sharp */}
+        {/* NAVIGATION */}
         <header className="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#030712] backdrop-blur-md">
           <nav className="max-w-7xl mx-auto flex items-center justify-between px-8 py-5">
             
