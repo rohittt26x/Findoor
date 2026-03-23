@@ -14,8 +14,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        {/* 1. AdSense Verification Meta Tag */}
-        <meta name="google-adsense-account" content="ca-pub-7799320727690809">
+        {/* 1. AdSense Verification Meta Tag (Notice the closing slash at the end!) */}
+        <meta name="google-adsense-account" content="ca-pub-7799320727690809" />
         
         {/* 2. AdSense Script Tag */}
         <script 
