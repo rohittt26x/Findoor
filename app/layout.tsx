@@ -1,5 +1,6 @@
 import "./globals.css";
 import Link from "next/link";
+import Script from "next/script"; // ✅ Added this import
 
 export const metadata = {
   title: "FINDOOR | MIT ADT",
@@ -15,11 +16,19 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="bg-[#030712] text-white font-sans min-h-screen antialiased selection:bg-blue-500/30">
         
+        {/* ✅ Google AdSense Script Added Here */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7799320727690809"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        
         {/* NAVIGATION - High Contrast & Sharp */}
         <header className="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#030712] backdrop-blur-md">
           <nav className="max-w-7xl mx-auto flex items-center justify-between px-8 py-5">
             
-            {/* LOGO - Styled with CSS to look like the generated logo */}
+            {/* LOGO */}
             <Link href="/" className="flex items-center gap-2 group">
               <div className="bg-gradient-to-br from-blue-600 to-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center font-black text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform">
                 F
@@ -29,7 +38,7 @@ export default function RootLayout({
               </span>
             </Link>
 
-            {/* NAV LINKS - Pure White/Bright Gray for visibility */}
+            {/* NAV LINKS */}
             <div className="hidden md:flex items-center gap-10 text-[12px] font-bold uppercase tracking-[0.2em]">
               <Link href="/" className="text-white hover:text-blue-400 transition-colors">
                 Home
